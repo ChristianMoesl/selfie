@@ -1395,6 +1395,19 @@ int subtractWrap(int a, int b) {
 }
 
 int multiplyWrap(int a, int b) {
+  int carry;
+  int temp;
+  int factorLhsHi;
+  int factorLhsLo;
+  int factorRhsHi;
+  int factorRhsLo;
+  int productHi;
+  int productLo;
+  int sign;
+  int base;
+
+  base = 65536;
+
   INT_OVERFLOW = OVERFLOW_NO;
 
   if (a > 0) {
@@ -1416,9 +1429,59 @@ int multiplyWrap(int a, int b) {
     }
   }
 
-  // implementing multiplication with * but relying on
-  // wrap-around semantics of bootstrapping compiler
-  return a * b;
+  sign = 1;
+
+  // Convert a into a positive big integer
+  if (a < 0) {
+    if (b >= 0)
+      sign = -1;
+
+    if (a == INT_MIN) {
+      factorLhsHi = twoToThePowerOf(15);
+      factorLhsLo = 0;
+    } else {
+      a = a * (-1);
+
+      factorLhsHi = a / base;
+      factorLhsLo = a % base;
+    }
+  } else {
+    factorLhsHi = a / base;
+    factorLhsLo = a % base;
+  }
+
+  // Convert b into a positive big integer
+  if (b < 0) {
+    if (sign == 1)
+      sign = -1;
+    else 
+      sign = 1;
+
+    if (b == INT_MIN) {
+      factorRhsHi = twoToThePowerOf(15);
+      factorRhsLo = 0;
+    } else {
+      b = b * (-1);
+
+      factorRhsHi = b / base;
+      factorRhsLo = b % base;
+    }
+  } else {
+    factorRhsHi = b / base;
+    factorRhsLo = b % base;
+  }
+
+  temp = factorLhsLo * factorRhsLo;
+  carry = temp / base;
+  productLo = temp % base;
+
+  temp = factorLhsHi * factorRhsLo + carry;
+  productHi = temp % base;
+
+  temp = factorLhsLo * factorRhsHi;
+  productHi = productHi + temp % base;
+
+  return  (productLo + leftShift(productHi, 16)) * sign;
 }
 
 int twoToThePowerOf(int p) {
