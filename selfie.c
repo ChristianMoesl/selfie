@@ -818,6 +818,9 @@ int* binaryName = (int*) 0; // file name of binary
 
 int* sourceLineNumber = (int*) 0; // source line number per emitted instruction
 
+int* metadataName = (int*) 0;
+int  metadataFD   = 0;
+
 int* assemblyName = (int*) 0; // name of assembly file
 int  assemblyFD   = 0;        // file descriptor of open assembly file
 
@@ -1906,6 +1909,149 @@ void printOctal(int n, int a) {
 
 void printBinary(int n, int a) {
   print(itoa(n, integer_buffer, 2, a, 0));
+}
+
+void printSymbolTable(int* scope, int from, int to, int* table) {
+  int* prefix;
+  int isLast;
+  int isEmpty;
+  int fd;
+
+  fd = outputFD;
+
+  outputFD = metadataFD;
+
+  isLast = table == global_symbol_table;
+  isEmpty = (int) table == 0;
+
+  prefix = "    ";
+
+  print((int*) "{");
+  println();
+  print(prefix);
+  print((int*) "scope: ");
+  putCharacter(CHAR_DOUBLEQUOTE);
+  if ((int) scope == 0)
+    print((int*) "global");
+  else {
+    print(scope);
+    print((int*) "()");
+  }
+  putCharacter(CHAR_DOUBLEQUOTE);
+  print((int*) ",");
+  println();
+  print(prefix);
+  print((int*) "start: ");
+  printHexadecimal(from, 8);
+  print((int*) ",");
+  println();
+  print(prefix);
+  print((int*) "end: ");
+  printHexadecimal(to, 8);
+  print((int*) ",");
+  println();
+  print(prefix);
+  print((int*) "table: [");
+
+  if (isEmpty == 0)
+    println();
+
+  while ((int) table != 0) {
+    print(prefix);
+    print(prefix);
+    print((int*) "{");
+    println();
+    print(prefix);
+    print(prefix);
+    print(prefix);
+    print((int*) "string: ");
+    putCharacter(CHAR_DOUBLEQUOTE);
+    print(getString(table));
+    putCharacter(CHAR_DOUBLEQUOTE);
+    print((int*) ",");
+    println();
+    print(prefix);
+    print(prefix);
+    print(prefix);
+    print((int*) "lineNumber: ");
+    printInteger(getLineNumber(table));
+    print((int*) ",");
+    println();
+    print(prefix);
+    print(prefix);
+    print(prefix);
+    print((int*) "class: ");
+    putCharacter(CHAR_DOUBLEQUOTE);
+    if (getClass(table) == VARIABLE)
+      print((int*) "VARIABLE");
+    else if (getClass(table) == PROCEDURE)
+      print((int*) "PROCEDURE");
+    else
+      print((int*) "STRING");
+    putCharacter(CHAR_DOUBLEQUOTE);
+    print((int*) ",");
+    println();
+    print(prefix);
+    print(prefix);
+    print(prefix);
+    print((int*) "type: ");
+    putCharacter(CHAR_DOUBLEQUOTE);
+    printType(getType(table));
+    putCharacter(CHAR_DOUBLEQUOTE);
+    print((int*) ",");
+    println();
+    print(prefix);
+    print(prefix);
+    print(prefix);
+    print((int*) "value: ");
+    printHexadecimal(getValue(table), 8);
+    print((int*) ",");
+    println();
+    print(prefix);
+    print(prefix);
+    print(prefix);
+    print((int*) "address: ");
+    printHexadecimal(getAddress(table), 8);
+    print((int*) ",");
+    println();
+    print(prefix);
+    print(prefix);
+    print(prefix);
+    print((int*) "scope: ");
+    putCharacter(CHAR_DOUBLEQUOTE);
+    printRegister(getScope(table));
+    putCharacter(CHAR_DOUBLEQUOTE);
+    println();
+    print(prefix);
+    print(prefix);
+    print((int*) "}");
+
+    table = getNextEntry(table);
+
+    if ((int) table != 0)
+      print((int*) ",");
+    else {
+      println();
+      print(prefix);
+      print((int*) "]");
+    }
+
+    println();
+  }
+
+  if (isEmpty) {
+    print((int*) "  ]");
+    println();
+  }
+
+  print((int*) "}");
+
+  if (isLast == 0)
+    print((int*) ",");
+
+  println();
+
+  outputFD = fd;
 }
 
 int roundUp(int n, int m) {
@@ -3875,6 +4021,10 @@ void gr_procedure(int* procedure, int type) {
   int parameters;
   int localVariables;
   int* entry;
+  int from;
+  int isDeclaration;
+  
+  from = binaryLength;
 
   // assuming procedure is undefined
   isUndefined = 1;
@@ -3921,6 +4071,8 @@ void gr_procedure(int* procedure, int type) {
     syntaxErrorSymbol(SYM_LPARENTHESIS);
 
   entry = searchSymbolTable(global_symbol_table, procedure, PROCEDURE);
+
+  isDeclaration = symbol == SYM_SEMICOLON;
 
   if (symbol == SYM_SEMICOLON) {
     // this is a procedure declaration
@@ -4017,6 +4169,9 @@ void gr_procedure(int* procedure, int type) {
 
   } else
     syntaxErrorUnexpected();
+
+  if (isDeclaration == 0)
+    printSymbolTable(procedure, from, binaryLength - WORDSIZE, local_symbol_table);
 
   local_symbol_table = (int*) 0;
 
@@ -4210,6 +4365,18 @@ void selfie_compile() {
 
   binaryName = sourceName;
 
+  metadataFD = openWriteOnly("metadata.obj");
+  
+  if (metadataFD < 0) {
+    print(selfieName);
+    print((int*) ": could not create metadata output file ");
+    println();
+
+    exit(EXITCODE_IOERROR);
+  }
+
+  metadataName = "metadata.obj";
+
   // allocate memory for storing binary
   binary       = malloc(maxBinaryLength);
   binaryLength = 0;
@@ -4314,6 +4481,8 @@ void selfie_compile() {
       printInteger(numberOfReturn);
       print((int*) " return");
       println();
+
+      printSymbolTable((int*) 0, 0, binaryLength - WORDSIZE, global_symbol_table);
     }
   }
 
