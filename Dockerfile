@@ -31,7 +31,7 @@ RUN apt-get update && apt-get install -y \
   zlib1g-dev \
   device-tree-compiler \
   pkg-config \
-  expat \
+  libexpat-dev \
   git \
   gcc
 
