@@ -18,7 +18,7 @@ stages:
 jobs:
   include:
     - stage: compile
-      script: selfie
+      script: make selfie
     - stage: test
       script: make selfie
     - stage: deploy
