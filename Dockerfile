@@ -5,8 +5,12 @@ RUN apt-get update && apt-get install -y \
     git \
   && rm -rf /var/lib/apt/lists/*
 
-# add selfie to the image
+# add selfie sources to the image
 COPY . /opt/selfie/
 
 # specify user work directory
 WORKDIR /opt/selfie
+
+# build selfie
+RUN make selfie
+
