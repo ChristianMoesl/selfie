@@ -5,9 +5,11 @@ branches:
 language:
 - c
 os:
+- linux
 - osx
 compiler:
 - gcc
+- clang
 stages:
   - compile
   - test
@@ -15,10 +17,8 @@ stages:
     if: branch = docker
 jobs:
   include:
-    - stage: compile
-      script: make selfie
-    - stage: test
-      script: make selfie
+    - stage: build and test
+      script: travis_wait 60 make selfie
     - stage: deploy
       sudo: required
       services:
