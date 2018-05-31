@@ -11,13 +11,12 @@ compiler:
 - gcc
 - clang
 stages:
-  - compile
   - test
   - name: deploy
     if: branch = docker
 jobs:
   include:
-    - stage: build and test
+    - stage: test
       script: travis_wait 60 make selfie
     - stage: deploy
       sudo: required
