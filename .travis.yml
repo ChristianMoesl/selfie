@@ -13,10 +13,20 @@ compiler:
 script: travis_wait 60 make selfie
 stages:
   - test
+  - test-spike
   - name: deploy
     if: branch = docker
 jobs:
   include:
+    - stage: test-spike
+      sudo: required
+      services:
+        - docker
+      os:
+        - linux
+      script: 
+        - docker build -t cksystemsteaching/selfie .
+        - docker run cksystemsteaching/selfie make spike
     - stage: deploy
       sudo: required
       services:
