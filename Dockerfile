@@ -14,3 +14,4 @@ WORKDIR /opt/selfie
 # build selfie
 RUN make selfie
 
+CMD /bin/bash
