@@ -18,19 +18,15 @@ jobs:
   include:
     - stage: test on spike
       sudo: required
-      services:
-        - docker
-      os:
-        - linux
+      services: docker
+      os: linux
       script: 
         - docker build -t cksystemsteaching/selfie .
         - docker run cksystemsteaching/selfie make spike
     - stage: deploy docker image
       sudo: required
-      services:
-        - docker
-      os:
-        - linux
+      services: docker
+      os: linux
       script: 
         - docker build -t cksystemsteaching/selfie .
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
