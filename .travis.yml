@@ -13,8 +13,8 @@ compiler:
 script: travis_wait 60 make selfie
 stages:
   - test
-  - test-spike
-  - name: deploy
+  - test spike
+  - name: deploy docker image
     if: branch = docker
 jobs:
   include:
