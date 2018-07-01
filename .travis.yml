@@ -6,19 +6,17 @@ language:
 - c
 os:
 - linux
-- osx
 compiler:
 - gcc
-- clang
 script: travis_wait 60 make selfie
 stages:
   - test
-  - test spike
+  - test on spike
   - name: deploy docker image
     if: branch = docker
 jobs:
   include:
-    - stage: test spike
+    - stage: test on spike
       sudo: required
       services:
         - docker
