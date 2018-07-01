@@ -18,7 +18,7 @@ stages:
     if: branch = docker
 jobs:
   include:
-    - stage: test-spike
+    - stage: test spike
       sudo: required
       services:
         - docker
@@ -27,14 +27,13 @@ jobs:
       script: 
         - docker build -t cksystemsteaching/selfie .
         - docker run cksystemsteaching/selfie make spike
-    - stage: deploy
+    - stage: deploy docker image
       sudo: required
       services:
         - docker
       os:
         - linux
       script: 
-        - docker build -t cksystemsteaching/selfie .
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         - docker push cksystemsteaching/selfie
 notifications:
