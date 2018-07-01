@@ -54,6 +54,10 @@ mob: selfie
 sat: selfie
 	./selfie -sat manuscript/cnfs/rivest.cnf
 	./selfie -c selfie.c -m 1 -sat manuscript/cnfs/rivest.cnf
+	
+# Run emulator on emulator
+spike: selfie
+	./selfie
 
 # Run everything
 all: compile quine debug replay os vm min mob sat
